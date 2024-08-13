@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jesper Fjellin's Github Pages</title>
     <style>
         body {
@@ -38,6 +40,9 @@
         }
         .project h2 {
             margin-top: 0;
+            border-bottom: 2px solid #007BFF;
+            padding-bottom: 10px;
+            color: #007BFF;
         }
         .project p {
             margin-bottom: 10px;
@@ -49,13 +54,29 @@
             border-radius: 8px;
             margin-bottom: 10px;
         }
+        .centered-content {
+            padding: 10px;
+            margin: 0 auto 20px auto;
+            width: 80%;
+            text-align: center;
+        }
+        .centered-content img {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+        .centered-content p {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
             <h1>Jesper Fjellin's Github Pages</h1>
-            <p>This is a showcase of some of the projects that I have worked on in the last year.</p>
+            <p>This is a showcase of some of the projects I have worked on in the last year.</p>
         </div>
     </header>
 
@@ -66,15 +87,33 @@
             <p>This demonstration highlights the I/O efficiency of the Flatgeobuf binary-coded format. The multipolygon data from OSM is stored in a PostgreSQL database with indexing and sequential scanning enabled. Flatgeobuf is also easily transformed to other geospatial formats such as GeoJSON, GML, GeoPackage etc for ease of delivering data to the user. Caching has been disabled for the demonstration.</p>
             <p>Stack: Python (Flask) and JavaScript, deployed on Heroku.</p>
             <iframe src="https://flatgeobuf-map-276140f7467f.herokuapp.com/" height="450px"></iframe>
-            <img src="images/flatgeobuf_results.png" alt="Flatgeobuf performance results" style="max-width:100%; margin-top:0px;">
-            <p>Statistics borrowed from <a href="https://flatgeobuf.org/" target="_blank">FlatGeobuf.org</a>. FlatGeobuf's superior I/O capabilities and compact file size make it an ideal choice for organizations aiming to optimize the efficiency of their web applications while minimizing database storage requirements.</p>
+            <div class="centered-content">
+                <img src="images/flatgeobuf_results.png" alt="Flatgeobuf performance results">
+                <p>Statistics borrowed from <a href="https://flatgeobuf.org/" target="_blank">FlatGeobuf.org</a>. FlatGeobuf's superior I/O capabilities and compact file size make it an ideal choice for organizations aiming to optimize the efficiency of their web applications while minimizing database storage requirements.</p>
+            </div>
         </div>
 
         <!-- Project 2 -->
         <div class="project">
-            <h2>Project Title 2</h2>
-            <p>A brief description of the second project. Explain what it does, the technologies used, and any other relevant information.</p>
-            <iframe src="your-second-project-url-here" height="450px"></iframe>
+            <h2>Sosilogikk Python-module</h2>
+            <p>Sosilogikk is a Python module intended to streamline the use of Python libraries like Shapely or Fiona for GIS analyses, on the Norwegian vector data format SOSI (Samordnet Opplegg for Stedfestet Informasjon). Sosilogikk allows the user to seamlessly load a .SOS file into a GeoPandas GeoDataFrame through only a few lines of code. <a href="https://github.com/jesperfjellin-kv/sosilogic" target="_blank">Github repo</a>.</p>
+            
+            <div class="centered-content">
+                <img src="images/SOSI-file.png" alt="Example SOSI-file">
+                <p>Example structure of a vector object in a SOSI-file. The dot- and coordinates-format makes it difficult to use with Python libraries.</p>
+            </div>
+        
+            <div class="centered-content">
+                <img src="images/GDF_sosi.png" alt="Example SOSI-file loaded into GeoDataFrame">
+                <p>Sosilogikk applied to a large SOSI-file, resulting in an excel-like table.</p>
+            </div>
+        
+            <p>Using the .to_file method, you can easily export the GeoDataFrame to any OGR-supported vector format, allowing software like ArcGIS or QGIS to be used.</p>
+            
+            <div class="centered-content">
+                <img src="images/flatgeobuf_dreneringslinjer.png" alt="Drainage lines in Flatgeobuf format visualized in QGIS" style="max-width:50%;">
+                <p>Drainage lines in Flatgeobuf format visualized in QGIS.</p>
+            </div>
         </div>
 
         <!-- Project 3 -->

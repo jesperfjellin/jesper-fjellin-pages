@@ -117,6 +117,30 @@
                 <p>Drainage lines in Flatgeobuf format visualized in QGIS.</p>
             </div>
         </div>
+        <!-- Project 3 -->
+        <div class="project">
+            <h2>Map Extractor: Retrieve text from PDFs</h2>
+            <p>This Python script enables users to extract text information from specific regions of scanned paper maps stored as PDFs. It allows for easy selection of a Region of Interest (ROI) on one page and then scans the same area across all pages in the PDF, performing Optical Character Recognition (OCR) to extract text. The results are saved in a CSV file for easy analysis and retrieval. <a href="https://github.com/jesperfjellin/Map-Extractor" target="_blank">Github repo</a>.</p>
+            
+            <div class="centered-content">
+                <img src="images/OCR_map_example.png" alt="Example ROI selection">
+                <p>Example of how the region of interest selection works in the selected PDF. The red border to the center right is the ROI selector.</p>
+            </div>
+
+            <p>The output when the script is applied to the PDF above. OCR is not perfect and will need minor manual tweaks/configuring of settings in script to best suit the quality of your input PDF. Notice that the Trase string is missing an underscore between 'Trase' and the number sequence.</p>
+        
+            <div class="centered-content">
+                <img src="images/output_example.png" alt="Example output from map PDF">
+                <p>Example output from script.</p>
+            </div>
+        
+            <p>The preprocess_image function is responsible for improving the accuracy OCR will have. If you are experiencing inaccurate results with Map Extractor, consider tweaking these parameters.</p>
+            
+            <div class="centered-content">
+                <img src="images/preprocess_image_tuning.png" alt="Settings for tuning the configuration of OCR" style="max-width:50%;">
+                <p>Preprocess_image function in the Map_Extractor.py script.</p>
+            </div>
+            <p>Potential further work: if you have all attributes displayed on the PDF, it should be possible to automatically create valid vector geometry from printed maps. This will require post-processing of the output data, to put it into a valid GeoJSON/GML/whatever structure, but also to clean up errors the OCR might have made. </p>
     </div>
 </body>
 </html>

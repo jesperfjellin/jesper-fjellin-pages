@@ -4192,25 +4192,23 @@ def process_files(args, conn, engine, existing_tables, schema):
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Get all the navigation links and projects
+            // Navigation functionality
             const navLinks = document.querySelectorAll('.project-nav a');
             const projects = document.querySelectorAll('.project');
             
-            // Update active link based on scroll position
             function updateActiveLink() {
                 let currentSection = '';
                 
                 projects.forEach(project => {
                     const projectTop = project.offsetTop;
                     const projectHeight = project.clientHeight;
-                    const scrollPosition = window.scrollY + 100; // Add offset to trigger earlier
+                    const scrollPosition = window.scrollY + 100;
                     
                     if (scrollPosition >= projectTop && scrollPosition < projectTop + projectHeight) {
                         currentSection = project.getAttribute('id');
                     }
                 });
                 
-                // Update active class
                 navLinks.forEach(link => {
                     link.classList.remove('active');
                     if (link.getAttribute('href').substring(1) === currentSection) {
@@ -4219,16 +4217,56 @@ def process_files(args, conn, engine, existing_tables, schema):
                 });
             }
             
-            // Listen for scroll events
             window.addEventListener('scroll', updateActiveLink);
             
-            // Update active link when clicking navigation
             navLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     navLinks.forEach(l => l.classList.remove('active'));
                     e.target.classList.add('active');
                 });
             });
+    
+            // Modal functionality
+            const modal = document.getElementById('code-modal');
+            
+            document.querySelectorAll('.view-code-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const feature = btn.getAttribute('data-feature');
+                    
+                    // Hide all code blocks
+                    document.querySelectorAll('.modal-body pre').forEach(block => {
+                        block.style.display = 'none';
+                    });
+                    
+                    // Show the selected code block
+                    const codeBlock = document.getElementById(`${feature}-code`);
+                    if (codeBlock) {
+                        codeBlock.parentElement.style.display = 'block';
+                    }
+                    
+                    modal.classList.add('active');
+                    document.body.classList.add('modal-open');
+                    
+                    // Force rehighlight
+                    hljs.highlightAll();
+                });
+            });
+    
+            // Close modal handlers
+            document.querySelector('.close-modal').addEventListener('click', () => {
+                modal.classList.remove('active');
+                document.body.classList.remove('modal-open');
+            });
+    
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    document.body.classList.remove('modal-open');
+                }
+            });
+    
+            // Initialize highlight.js
+            hljs.highlightAll();
         });
     </script>
 </body>

@@ -9,28 +9,37 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
     <style>
         /* General Styles */
         :root {
-            --primary-color: #2d3436;     /* Dark grey */
-            --secondary-color: #636e72;   /* Medium grey */
-            --accent-color: #0984e3;      /* Bright blue */
-            --text-color: #2d3436;
-            --bg-color: #ffffff;
-            --card-bg: #f5f6fa;
-            --shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            --primary-color: #2d2d2d;     /* Dark gray */
+            --secondary-color: #a0a0a0;   /* Medium gray for text */
+            --accent-color: #FF9900;      /* Neon orange from your Ridge.py (1.0, 0.6, 0.0) */
+            --text-color: #ffffff;        /* White text */
+            --bg-color: #1a1a1a;         /* Dark background */
+            --card-bg: #2f2f2f;          /* Slightly lighter than background */
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-family: 'Inter', 'Segoe UI', sans-serif, 'Ubuntu';
             line-height: 1.7;
             margin: 0;
             padding: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
+        }
+
+        .header-content h1, .title, .github-links .btn {
+            background: rgba(0, 0, 0, 0.5); /* Light black background */
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: #fff;
+            display: inline-block;
         }
 
         a {
@@ -51,22 +60,23 @@
         /* Modern Header */
         header {
             height: 100vh;
-            background: linear-gradient(135deg, 
-                rgba(45, 52, 54, 0.1),
-                rgba(99, 110, 114, 0.1)),
-                url('images/bg-header.png') center/cover;
+            background: url('images/Mount_Everest.png') center/contain;
+            background-color: #111111;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             position: relative;
+            background-repeat: no-repeat;
+            padding: 0; /* Remove or minimize padding */
         }
 
         .header-content {
             text-align: center;
             max-width: 800px;
-            padding: 40px;
+            padding: 20px 40px; /* Adjust the top padding to move content down */
             position: relative;
+            margin-top: -150px; /* Use margin to move the content down */
         }
 
         .header-content::before {
@@ -86,10 +96,9 @@
             margin: 0 0 60px 0;
             letter-spacing: -0.02em;
             color: #fff;
-            background: rgba(45, 52, 54, 1.20);
+            background: rgba(0, 0, 0, 0);
             padding: 2px 25px;
             border-radius: 12px;
-            backdrop-filter: blur(5px);
             display: inline-block;
             line-height: 1.2;
         }
@@ -98,10 +107,9 @@
             font-size: 1.5em;
             color: #fff;
             margin: 0 0 40px 0;
-            background: rgba(45, 52, 54, 1.20);
+            background: rgba(0, 0, 0, 0);
             padding: 3px 15px;
             border-radius: 8px;
-            backdrop-filter: blur(5px);
             display: inline-block;
             line-height: 1.5;
         }
@@ -117,7 +125,7 @@
         .btn {
             display: inline-block;
             padding: 10px 25px;
-            background: rgba(45, 52, 54, 1.20);
+            background: rgba(0, 0, 0, 0.3);
             color: #fff;
             border-radius: 30px;
             backdrop-filter: blur(5px);
@@ -185,9 +193,9 @@
 
         .project-nav a.active,
         .project-nav a:hover {
-            color: var(--accent-color);
+            color: var(--text-color);
             border-left-color: var(--accent-color);
-            background: rgba(9, 132, 227, 0.1);
+            background: rgba(255, 153, 0, 0.1); /* Very subtle orange background */
         }
 
         /* Projects Container */

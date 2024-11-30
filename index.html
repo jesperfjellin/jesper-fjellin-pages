@@ -559,7 +559,8 @@
                 <li><a href="#dbfriend" class="active">dbfriend</a></li>
                 <li><a href="#sosilogikk">Sosilogikk</a></li>
                 <li><a href="#map-extractor">Map Extractor</a></li>
-                <li><a href="#docker-in-production">Docker in production</a></li>
+                <li><a href="#Docker-in-Production-Environments">Docker in Production Environments</a></li>
+                <li><a href="#rust-bindings">Rust Bindings in Python</a></li>
             </ul>
         </nav>
         
@@ -673,8 +674,8 @@
             </div>
 
             <!-- Project 4 -->
-            <div class="project" id="docker-in-production">
-                <h2>Docker in GIS Production - Bridging Technical Gaps</h2>
+            <div class="project" id="Docker-in-Production-Environments">
+                <h2>Docker in Production Environments - Bridging Technical Gaps</h2>
                 <p>Working in GIS production environments has highlighted an interesting challenge: the gap between what can be automated and what typically is automated. While tools like ArcGIS and QGIS excel at interactive analysis, many workflows would benefit from programmatic automation - yet often remain manual processes.</p>
             
                 <div class="blog-section">
@@ -704,7 +705,7 @@
 
                     <div class="centered-content">
                         <img src="images/docker_launcher.png" alt="Docker-based GIS tool launcher interface">
-                        <p>Example of a Docker-based GIS tool launcher that abstracts away the complexity of container management and environment setup.</p>
+                        <p>Example of a Docker-based GIS tool launcher in Python that abstracts away the complexity of container management and environment setup.</p>
                     </div>
             
                     <h3>Reflections on Production Use</h3>
@@ -720,6 +721,45 @@
                     <p>The integration of Docker in GIS workflows opens interesting possibilities for the future of spatial data processing. As cloud infrastructure becomes more prevalent in GIS, containerized workflows could become the standard way of handling automated spatial analysis. The key will be maintaining the balance between powerful automation capabilities and user-friendly interfaces.</p>
                 </div>
             </div>
+            <!-- Project 5 -->
+            <div class="project" id="rust-bindings">
+                <h2>Rust Bindings in Python - When Fast Data Processing Matters</h2>
+                <p>Python is a powerful language for rapid development, especially in the GIS domain, thanks to libraries like GeoPandas and Shapely. However, when processing large datasets or performing complex calculations, Python's speed can become a limitation. This is where Rust comes in - offering the speed we need while letting us keep Python's ease of use.</p>
+            
+                <div class="blog-section">
+                    <h3>Understanding Rust Bindings</h3>
+                    <p>Bindings are essentially a way to connect two different programming languages, allowing them to work together. In this case, we use Rust bindings to integrate Rust's high-performance capabilities into Python workflows. This means we can write the most performance-critical parts of our GIS analysis in Rust, while still using Python for the overall workflow.</p>
+            
+                    <h3>Why Use Rust?</h3>
+                    <p>Many traditional GIS tools are written in C++, and for good reason - C++ offers excellent performance and has been the go-to language for computationally intensive tasks for decades. However, Rust brings some unique advantages to the table. While matching C++'s performance, Rust's compiler enforces memory safety and thread safety at compile time, preventing many common programming errors before they can become runtime bugs. This is particularly valuable when working with large spatial datasets where data integrity is crucial.</p>
+                    <p>Additionally, Rust's modern tooling and package management system makes it easier to create and maintain bindings compared to C++. The language's focus on safe concurrency also makes it particularly well-suited for parallel processing of spatial data, an increasingly important consideration as datasets continue to grow in size and complexity.</p>
+            
+                    <h3>Performance Comparison</h3>
+                    <p>To demonstrate the performance difference between Python and Rust, I performed a simple GIS task: creating buffers around 1 million point geometries, and checking how many of the buffers overlapped with each other. The results were striking - the Rust implementation completed in just 2 seconds, while the Python version took 84 seconds to finish the same task.</p>
+
+                    <div class="centered-content">
+                        <img src="images/rust_performance.png" alt="Buffer analysis performance comparison">
+                        <p>Results from the performance comparison.</p>
+                    </div>
+                    
+                    <div class="feature-cards">
+                        <div class="feature-card">
+                            <h4>Rust Implementation Highlights</h4>
+                            <p>The key features that make this implementation fast:</p>
+                            <button class="view-code-btn" data-feature="rust-parallel">Parallel Processing →</button>
+                        </div>
+                        <div class="feature-card">
+                            <h4>Python Integration</h4>
+                            <p>How we expose the Rust function to Python:</p>
+                            <button class="view-code-btn" data-feature="rust-binding">Binding Setup →</button>
+                        </div>
+                    </div>
+                    
+                    <h3>Integrating Rust with Python</h3>
+                    <p>By incorporating Rust into a Python-based workflow, we can leverage the strengths of both languages. Python remains the glue that holds the workflow together, providing ease of use and flexibility, while Rust handles the heavy lifting where performance is critical. This combination allows us to build robust GIS applications that are both user-friendly and highly efficient.</p>
+                </div>
+            </div>
+    </div>
         </div>
     </div>
 
@@ -1276,9 +1316,137 @@ except Exception as e:
     logger.error(f"Error creating spatial index on '{schema}.{table_name}': {e}")
     conn.rollback()
 finally:
-    cursor.close()
-                </code></pre>
+    cursor.close()</code></pre>
+    <pre><code class="language-rust" id="rust-parallel-code">
+// Parallel processing implementation
+use rayon::prelude::*;  // Parallel processing functionality
+use std::collections::HashMap;
 
+let cell_size = buffer_distance * 2.0;
+let buffer_distance_squared = buffer_distance * buffer_distance;
+
+// Create spatial grid for efficient neighbor searching
+let mut grid: HashMap<(i32, i32), Vec<(usize, (f64, f64))>> = 
+    HashMap::with_capacity(points.len() / 10);
+
+// Assign points to grid cells
+for (i, &(x, y)) in points.iter().enumerate() {
+    let cell = (
+        (x / cell_size).floor() as i32,
+        (y / cell_size).floor() as i32,
+    );
+    grid.entry(cell)
+        .or_insert_with(Vec::new)
+        .push((i, (x, y)));
+}
+
+// Process grid cells in parallel
+let results: Vec<(usize, usize)> = grid.par_iter()
+    .flat_map(|(&(cell_x, cell_y), cell_points)| {
+        let mut local_results = Vec::new();
+        
+        // Check current and neighboring cells
+        let neighbor_cells = [
+            (cell_x, cell_y),
+            (cell_x, cell_y + 1),
+            (cell_x + 1, cell_y - 1),
+            (cell_x + 1, cell_y),
+            (cell_x + 1, cell_y + 1),
+        ];
+        
+        for &neighbor_cell in neighbor_cells.iter() {
+            if let Some(neighbor_points) = grid.get(&neighbor_cell) {
+                for &(i, (x1, y1)) in cell_points {
+                    for &(j, (x2, y2)) in neighbor_points {
+                        if i < j {
+                            let dx = x1 - x2;
+                            let dy = y1 - y2;
+                            let distance_squared = dx * dx + dy * dy;
+                            if distance_squared <= buffer_distance_squared && distance_squared > 0.0 {
+                                local_results.push((i, j));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        local_results
+    })
+    .collect();
+                    </code></pre>
+        
+                    <pre><code class="language-rust" id="rust-binding-code">
+// Python binding setup
+use pyo3::prelude::*;
+use std::collections::HashMap;
+use rayon::prelude::*;
+
+#[pyfunction]
+fn points_within_buffer_batch(
+    points: Vec<(f64, f64)>, 
+    buffer_distance: f64
+) -> PyResult<Vec<(usize, usize)>> {
+    let cell_size = buffer_distance * 2.0;
+    let buffer_distance_squared = buffer_distance * buffer_distance;
+    
+    let mut grid: HashMap<(i32, i32), Vec<(usize, (f64, f64))>> = 
+        HashMap::with_capacity(points.len() / 10);
+    
+    // Build spatial grid
+    for (i, &(x, y)) in points.iter().enumerate() {
+        let cell = (
+            (x / cell_size).floor() as i32,
+            (y / cell_size).floor() as i32,
+        );
+        grid.entry(cell)
+            .or_insert_with(Vec::new)
+            .push((i, (x, y)));
+    }
+    
+    // Process points in parallel and find pairs within buffer distance
+    let results = grid.par_iter()
+        .flat_map(|(&(cell_x, cell_y), cell_points)| {
+            let mut local_results = Vec::new();
+            let neighbor_cells = [
+                (cell_x, cell_y),
+                (cell_x, cell_y + 1),
+                (cell_x + 1, cell_y - 1),
+                (cell_x + 1, cell_y),
+                (cell_x + 1, cell_y + 1),
+            ];
+            
+            for &neighbor_cell in neighbor_cells.iter() {
+                if let Some(neighbor_points) = grid.get(&neighbor_cell) {
+                    for &(i, (x1, y1)) in cell_points {
+                        for &(j, (x2, y2)) in neighbor_points {
+                            if i < j {
+                                let dx = x1 - x2;
+                                let dy = y1 - y2;
+                                let distance_squared = dx * dx + dy * dy;
+                                if distance_squared <= buffer_distance_squared && distance_squared > 0.0 {
+                                    local_results.push((i, j));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            local_results
+        })
+        .collect();
+
+    Ok(results)
+}
+
+#[pymodule]
+fn rust_bindings(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(points_within_buffer_batch, m)?)?;
+    Ok(())
+}
+        </code></pre>
+                </div>
+            </div>
+        </div>
                 
             </div>
         </div>

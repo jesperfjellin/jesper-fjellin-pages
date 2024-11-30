@@ -505,6 +505,36 @@
         body.modal-open {
             overflow: hidden;
         }
+
+        .blog-section {
+            margin-top: 30px;
+        }
+
+        .blog-section h3 {
+            color: var(--text-color);
+            font-size: 1.6em;
+            margin: 40px 0 20px 0;
+        }
+
+        .blog-section p {
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .blog-section ul {
+            margin: 20px 0;
+            padding-left: 25px;
+        }
+
+        .blog-section li {
+            margin-bottom: 12px;
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .blog-section .centered-content {
+            margin: 40px auto;
+        }
     </style>
 </head>
 <body>
@@ -529,6 +559,7 @@
                 <li><a href="#dbfriend" class="active">dbfriend</a></li>
                 <li><a href="#sosilogikk">Sosilogikk</a></li>
                 <li><a href="#map-extractor">Map Extractor</a></li>
+                <li><a href="#docker-in-production">Docker in production</a></li>
             </ul>
         </nav>
         
@@ -594,7 +625,7 @@
 
             <!-- Project 2 -->
             <div class="project" id="sosilogikk">
-                <h2>Sosilogikk Python-module</h2>
+                <h2>Sosilogikk</h2>
                 <p>Sosilogikk is a Python module intended to streamline the use of Python libraries like Shapely or Fiona for GIS analyses, on the Norwegian vector data format SOSI (Samordnet Opplegg for Stedfestet Informasjon). Sosilogikk allows the user to seamlessly load a .SOS file into a GeoPandas GeoDataFrame through only a few lines of code. <a href="https://github.com/jesperfjellin/sosilogikk" target="_blank">Github repo</a></p>
                 
                 <div class="centered-content">
@@ -639,6 +670,55 @@
                     <p>Preprocess_image function in the Map_Extractor.py script.</p>
                 </div>
                 <p>Potential further work: if you have all attributes displayed on the PDF, it should be possible to automatically create valid vector geometry from printed maps. This will require post-processing of the output data, to put it into a valid GeoJSON/GML/whatever structure, but also to clean up errors the OCR might have made. </p>
+            </div>
+
+            <!-- Project 4 -->
+            <div class="project" id="docker-in-production">
+                <h2>Docker in GIS Production - Bridging Technical Gaps</h2>
+                <p>Working in GIS production environments has highlighted an interesting challenge: the gap between what can be automated and what typically is automated. While tools like ArcGIS and QGIS excel at interactive analysis, many workflows would benefit from programmatic automation - yet often remain manual processes.</p>
+            
+                <div class="blog-section">
+                    <h3>The Automation Challenge in GIS</h3>
+                    <p>GIS workflows frequently involve repetitive tasks that are perfect candidates for automation:</p>
+                    <ul>
+                        <li>Database-wide topology validation and error checking</li>
+                        <li>Scheduled quality control processes</li>
+                        <li>Statistical aggregation of incoming project data</li>
+                        <li>Automated spatial sampling and analysis</li>
+                    </ul>
+                    <p>The challenge isn't identifying what to automate - it's making automation accessible to GIS professionals who may not have programming experience. This is where Docker has proven particularly valuable.</p>
+            
+                    <h3>Docker as a Bridge</h3>
+                    <p>Docker's containerization approach solves several fundamental challenges in GIS automation:</p>
+                    <ul>
+                        <li>It eliminates the complexity of Python environment management</li>
+                        <li>It ensures consistent spatial libraries across different machines</li>
+                        <li>It packages all dependencies in a single, shareable unit</li>
+                        <li>Most importantly, it makes advanced automation accessible to non-programmers</li>
+                    </ul>
+            
+                    
+            
+                    <h3>From Theory to Practice</h3>
+                    <p>In practice, implementing Docker in a GIS environment involves creating a layer of abstraction between the technical complexity and the end user. The implementation typically involves wrapping Docker commands in a user-friendly interface - the user doesn't need to understand the underlying system, they simply interact with familiar buttons and inputs while Docker handles the complex environment management behind the scenes. To accomplish this, we can create a launcher script in the form of a batch file that presents the user with inputs through a simple graphical user interface. As I work in an environment where Python comes pre-installed, I chose to use a Python script for this task. </p>
+
+                    <div class="centered-content">
+                        <img src="images/docker_launcher.png" alt="Docker-based GIS tool launcher interface">
+                        <p>Example of a Docker-based GIS tool launcher that abstracts away the complexity of container management and environment setup.</p>
+                    </div>
+            
+                    <h3>Reflections on Production Use</h3>
+                    <p>Using Docker in production has revealed several interesting insights:</p>
+                    <ul>
+                        <li>Environment Consistency: The "it works on my machine" problem essentially disappears</li>
+                        <li>Version Management: Docker images provide a reliable way to track and roll back changes</li>
+                        <li>Distribution: Updates to spatial analysis tools can be pushed through Docker Hub without requiring end-user intervention</li>
+                        <li>Isolation: Each process runs in its own container, preventing system-wide conflicts</li>
+                    </ul>
+            
+                    <h3>Looking Forward</h3>
+                    <p>The integration of Docker in GIS workflows opens interesting possibilities for the future of spatial data processing. As cloud infrastructure becomes more prevalent in GIS, containerized workflows could become the standard way of handling automated spatial analysis. The key will be maintaining the balance between powerful automation capabilities and user-friendly interfaces.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1198,6 +1278,8 @@ except Exception as e:
 finally:
     cursor.close()
                 </code></pre>
+
+                
             </div>
         </div>
     </div>

@@ -561,6 +561,7 @@
                 <li><a href="#Delta-Encoding-and-MongoDB">Delta Encoding and MongoDB</a></li>
                 <li><a href="#Docker-in-Production-Environments">Docker in Production Environments</a></li>
                 <li><a href="#rust-bindings">Rust Bindings in Python</a></li>
+                <li><a href="#topology-testing">Building Custom Topology Testing Solutions</a></li>
             </ul>
         </nav>
         
@@ -650,49 +651,48 @@
             <!-- Project 3 -->
             <div class="project" id="Delta-Encoding-and-MongoDB">
                 <h2>Delta Encoding and MongoDB - Optimizing for Cloud Computing</h2>
-                <p>Modern cloud-native GIS applications often need to efficiently store and transmit large volumes of geographic data between services. While GeoJSON is the standard format for geographic data exchange, its text-based nature makes it suboptimal for cloud storage and transmission. A solution is to leverage MongoDB's BSON format, combined with encoding coordinates based on differences, to create a cloud-optimized geographic data pipeline.</p>
+                <p>Modern cloud-native GIS applications often need to efficiently store and transmit large volumes of geographic data between services. While GeoJSON is the standard format for geographic data exchange, its text-based nature makes it suboptimal for cloud storage and transmission. This solution combines MongoDB's BSON format with delta encoding to create a highly efficient geographic data pipeline. <a href="https://github.com/jesperfjellin/bson_encoding" target="_blank">Github repo</a></p>
             
                 <div class="blog-section">
                     <h3>BSON and MongoDB in Cloud Computing</h3>
-                    <p>BSON (Binary JSON) is MongoDB's binary format, specifically designed for cloud-scale data operations. Unlike traditional JSON, BSON provides native support for different numeric types and binary data, making it ideal for geographic coordinate storage. This becomes particularly important in microservice architectures where data needs to be efficiently serialized, transmitted, and stored across different cloud services. By converting GeoJSON to BSON format, we create perfect alignment with MongoDB's native storage format, allowing geographic data to be directly stored in and retrieved from MongoDB databases without conversion overhead. In cloud environments where MongoDB Atlas is increasingly common, this native format compatibility translates to significant performance benefits and reduced processing costs.</p>
-            
+                    <p>BSON (Binary JSON) is MongoDB's binary format, specifically designed for cloud-scale data operations. Unlike traditional JSON, BSON provides native support for different numeric types and binary data, making it ideal for geographic coordinate storage. This becomes particularly important in microservice architectures where data needs to be efficiently serialized, transmitted, and stored across different cloud services. In cloud environments where MongoDB Atlas is increasingly common, this native format compatibility translates to significant performance benefits and reduced processing costs.</p>
                     
                     <h3>Understanding Delta Encoding</h3>
                     <p>Delta encoding is a compression technique that stores the differences (deltas) between consecutive values rather than the values themselves. For geographic coordinates, this is particularly effective because consecutive points in a geometry are typically close to each other, resulting in small delta values that require fewer bits to store.</p>
-
+            
                     <div class="centered-content">
                         <img src="images/delta_encoding.png" alt="Delta encoding visualization">
                         <p>Visualization of delta encoding: Starting with a sequence of numbers (top row), we compute the differences between consecutive values (second row). Negative differences are then shifted to positive values (third row) for efficient binary representation (bottom row). This process significantly reduces storage requirements while maintaining perfect reversibility. (Adapted from Xia et al., The VLDB Journal, 2024)</p>
                     </div>
-
-                    <h3>How It Works</h3>
-                    <p>Our implementation follows these key steps:</p>
+            
+                    <h3>Implementation Approach</h3>
+                    <p>The implementation in BSON_encoder.py follows these key steps:</p>
                     <ol>
                         <li><strong>Scale and Convert to Integers:</strong> First, we scale the floating-point coordinates (typically by 1e6) and convert them to integers to preserve precision while enabling efficient delta calculations.</li>
                         <li><strong>Calculate Deltas:</strong> For each point after the first, we store the difference from the previous point rather than the absolute coordinates.</li>
                         <li><strong>BSON Serialization:</strong> The delta-encoded coordinates are then serialized to BSON format, which provides efficient storage of integer arrays.</li>
                         <li><strong>GZIP Compression:</strong> Finally, we apply GZIP compression to further reduce the size of the encoded data.</li>
                     </ol>
-
-                    <p>Here's a simplified example of how delta encoding works with coordinates:</p>
+            
+                    <p>Here's a simplified example showing the transformation:</p>
                     <pre><code class="language-python">
-                    Original coordinates: [(100.123456, 50.123456), (100.123476, 50.123476)]
-                    After scaling by 1e6: [(100123456, 50123456), (100123476, 50123476)]
-                    Delta encoded: [(100123456, 50123456), (20, 20)]  # Second point stored as difference
+            Original coordinates: [(100.123456, 50.123456), (100.123476, 50.123476)]
+            After scaling by 1e6: [(100123456, 50123456), (100123476, 50123476)]
+            Delta encoded: [(100123456, 50123456), (20, 20)]  # Second point stored as difference
                     </code></pre>
-
-                    <p>This approach typically achieves 60-80% size reduction while maintaining full coordinate precision. The compression is particularly effective for complex geometries like polygons and linestrings where consecutive points are spatially close.</p>
-
-                    <h3>Cloud Architecture Benefits</h3>
-                    <p>In modern cloud architectures, geographic data often needs to flow between various services - from storage to processing to web APIs. BSON's binary format significantly reduces the bandwidth required for these operations. For example, a typical GeoJSON file containing city infrastructure data might be reduced from 100MB to 20MB, directly translating to 80% lower data transfer costs and faster inter-service communication.</p>
-
+            
+                    <h3>Compressions Results</h3>
+                    <p>In modern cloud architectures, geographic data flows between various services - from storage to processing to web APIs. This combined approach of delta encoding and BSON serialization dramatically reduces the bandwidth required for these operations. Testing with real-world infrastructure data:</p>
+            
                     <div class="centered-content">
                         <img src="images/encoding_results.png" alt="Data size comparison between GeoJSON and BSON formats">
-                        <p>Comparison of data sizes: Original GeoJSON format vs BSON-encoded format with delta compression. The combined approach achieves reduces the file size of the original GeoJSON file by almost 90% while maintaining full coordinate precision.</p>
+                        <p>Comparison of data sizes: Original GeoJSON format vs BSON-encoded format with delta compression. The combined approach reduces the file size by almost 90% while maintaining full coordinate precision.</p>
                     </div>
             
-                    <h3>Beyond Simple Compression</h3>
-                    <p>While the size reduction is significant, the real value lies in the format's cloud-native nature. The compressed data remains fully compatible with MongoDB's geospatial queries and indexes, allowing for efficient spatial operations directly on the compressed data. As an added benefit, the compression is completely reversible - users can always convert back to standard GeoJSON when needed, with no loss of precision or information, and due to the flattening of the GeoJSON structure, the file size is smaller than before compression.</p>
+                    <h3>Cloud Integration Benefits</h3>
+                    <p>While the size reduction is impressive, the real value lies in the format's cloud-native nature. The compressed data remains fully compatible with MongoDB's geospatial queries and indexes, allowing for efficient spatial operations directly on the compressed data. The compression is completely reversible, and the flattened GeoJSON structure results in smaller file sizes even after decompression.</p>
+            
+
                 </div>
             </div>
 
@@ -780,6 +780,88 @@
                     
                     <h3>Integrating Rust with Python</h3>
                     <p>By incorporating Rust into a Python-based workflow, we can leverage the strengths of both languages. Python remains the glue that holds the workflow together, providing ease of use and flexibility, while Rust handles the heavy lifting where performance is critical. This combination allows us to build robust GIS applications that are both user-friendly and highly efficient.</p>
+                </div>
+            </div>
+
+            <!-- Project 6 -->
+            <div class="project" id="topology-testing">
+                <h2>Building Custom Topology Testing Solutions</h2>
+                <p>An exploration of why and how to build custom topology validation tools in an era of increasingly complex geospatial data relationships. While traditional GIS tools offer built-in topology checks, modern spatial data often requires more nuanced, domain-specific validation rules. <a href="https://github.com/jesperfjellin/DIY_topology" target="_blank">Github repo</a></p>
+            
+                <div class="blog-section">
+                    <h3>Why Custom Topology Testing?</h3>
+                    <p>As geospatial data becomes more complex, the relationships between features often extend beyond simple geometric rules. For example, a road intersection might be valid or invalid based on multiple factors:</p>
+                    <ul>
+                        <li>Physical infrastructure (bridges, tunnels)</li>
+                        <li>Administrative classifications</li>
+                        <li>Temporal constraints</li>
+                        <li>Domain-specific business rules</li>
+                    </ul>
+                    <p>While tools like ArcGIS, QGIS, and PostGIS provide robust basic topology checks, they may not capture these nuanced relationships without significant customization.</p>
+            
+                    <h3>A Rule-Based Approach</h3>
+                    <p>This project demonstrates how to build a flexible topology testing framework that separates validation rules from the validation logic. Using external configuration files, domain experts can define what constitutes a valid topological relationship:</p>
+            
+                    <pre class="line-numbers"><code class="language-json">
+                        {
+                            "global_settings": {
+                                "id_attribute": "id",
+                                "output_folder_name": "TopologyTest_Output",
+                                "tolerances": {
+                                    "gap": 0.001,
+                                    "overlap": 0.001
+                                },
+                                "enabled_checks": {
+                                    "intersections": true,
+                                    "self_intersections": true,
+                                    "gaps": true,
+                                    "dangles": true,
+                                    "overlaps": true,
+                                    "containment": true
+                                }
+                            },
+                            "dataset_rules": {
+                                "roads": {
+                                    "allow_intersection_if": [
+                                        {
+                                            "attribute": "terrain",
+                                            "values": ["bridge", "tunnel", "air"]
+                                        }
+                                    ],
+                                    "allow_overlap_if": [
+                                        {
+                                            "attribute": "type",
+                                            "values": ["service_road", "emergency_lane"]
+                                        }
+                                    ],
+                                    "check_dangles": true,
+                                    "check_self_intersections": true
+                                },
+                                "buildings": {
+                                    "allow_intersection_if": [],
+                                    "allow_overlap_if": [],
+                                    "check_gaps": true,
+                                    "gap_tolerance": 0.5,
+                                    "check_containment": true
+                                }
+                            }
+                        }</code></pre>
+            
+                    <div class="centered-content">
+                        <img src="images/topology_results.png" alt="Example of topology validation results">
+                        <p>Terminal print of the topology validation results when two files are tested against rules set by the user.</p>
+                    </div>
+            
+                    <h3>Implementation Strategy</h3>
+                    <p>The framework demonstrates several key principles for custom topology testing:</p>
+                    <ol>
+                        <li><strong>Separation of Concerns:</strong> Keeping validation rules separate from the validation engine allows for easy updates as business rules evolve</li>
+                        <li><strong>Attribute-Aware Validation:</strong> Moving beyond pure geometry to consider feature attributes and relationships</li>
+                        <li><strong>Extensibility:</strong> A modular design that allows for adding new types of topology checks as needs arise</li>
+                        <li><strong>Clear Reporting:</strong> Generating results that help users understand and fix topology issues in their specific context</li>
+                    </ol>
+            
+                    <p>This approach shows how organizations can build tools that validate not just geometric correctness, but also domain-specific spatial relationships that matter to their business processes.</p>
                 </div>
             </div>
     </div>
@@ -1555,5 +1637,7 @@ fn rust_bindings(_py: Python, m: &PyModule) -> PyResult<()> {
                                 });
                             });
                         </script>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
                     </body>
                 </html>

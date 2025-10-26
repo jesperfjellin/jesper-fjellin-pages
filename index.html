@@ -562,6 +562,7 @@
                 <li><a href="#Docker-in-Production-Environments">Docker in Production Environments</a></li>
                 <li><a href="#rust-bindings">Rust Bindings in Python</a></li>
                 <li><a href="#topology-testing">Building Custom Topology Testing Solutions</a></li>
+                <li><a href="#pgmon">PGMon - Rust Observability</a></li>
             </ul>
         </nav>
         
@@ -784,87 +785,90 @@
             </div>
 
             <!-- Project 6 -->
-            <div class="project" id="topology-testing">
-                <h2>Building Custom Topology Testing Solutions</h2>
-                <p>An exploration of why and how to build custom topology validation tools in an era of increasingly complex geospatial data relationships. While traditional GIS tools offer built-in topology checks, modern spatial data often requires more nuanced, domain-specific validation rules. <a href="https://github.com/jesperfjellin/DIY_topology" target="_blank">Github repo</a></p>
-            
-                <div class="blog-section">
-                    <h3>Why Custom Topology Testing?</h3>
-                    <p>As geospatial data becomes more complex, the relationships between features often extend beyond simple geometric rules. For example, a road intersection might be valid or invalid based on multiple factors:</p>
-                    <ul>
-                        <li>Physical infrastructure (bridges, tunnels)</li>
-                        <li>Administrative classifications</li>
-                        <li>Temporal constraints</li>
-                        <li>Domain-specific business rules</li>
-                    </ul>
-                    <p>While tools like ArcGIS, QGIS, and PostGIS provide robust basic topology checks, they may not capture these nuanced relationships without significant customization.</p>
-            
-                    <h3>A Rule-Based Approach</h3>
-                    <p>This project demonstrates how to build a flexible topology testing framework that separates validation rules from the validation logic. Using external configuration files, domain experts can define what constitutes a valid topological relationship:</p>
-            
-                    <pre class="line-numbers"><code class="language-json">
-                        {
-                            "global_settings": {
-                                "id_attribute": "id",
-                                "output_folder_name": "TopologyTest_Output",
-                                "tolerances": {
-                                    "gap": 0.001,
-                                    "overlap": 0.001
-                                },
-                                "enabled_checks": {
-                                    "intersections": true,
-                                    "self_intersections": true,
-                                    "gaps": true,
-                                    "dangles": true,
-                                    "overlaps": true,
-                                    "containment": true
-                                }
-                            },
-                            "dataset_rules": {
-                                "roads": {
-                                    "allow_intersection_if": [
-                                        {
-                                            "attribute": "terrain",
-                                            "values": ["bridge", "tunnel", "air"]
-                                        }
-                                    ],
-                                    "allow_overlap_if": [
-                                        {
-                                            "attribute": "type",
-                                            "values": ["service_road", "emergency_lane"]
-                                        }
-                                    ],
-                                    "check_dangles": true,
-                                    "check_self_intersections": true
-                                },
-                                "buildings": {
-                                    "allow_intersection_if": [],
-                                    "allow_overlap_if": [],
-                                    "check_gaps": true,
-                                    "gap_tolerance": 0.5,
-                                    "check_containment": true
-                                }
-                            }
-                        }</code></pre>
-            
-                    <div class="centered-content">
-                        <img src="images/topology_results.png" alt="Example of topology validation results">
-                        <p>Terminal print of the topology validation results when two files are tested against rules set by the user.</p>
-                    </div>
-            
-                    <h3>Implementation Strategy</h3>
-                    <p>The framework demonstrates several key principles for custom topology testing:</p>
-                    <ol>
-                        <li><strong>Separation of Concerns:</strong> Keeping validation rules separate from the validation engine allows for easy updates as business rules evolve</li>
-                        <li><strong>Attribute-Aware Validation:</strong> Moving beyond pure geometry to consider feature attributes and relationships</li>
-                        <li><strong>Extensibility:</strong> A modular design that allows for adding new types of topology checks as needs arise</li>
-                        <li><strong>Clear Reporting:</strong> Generating results that help users understand and fix topology issues in their specific context</li>
-                    </ol>
-            
-                    <p>This approach shows how organizations can build tools that validate not just geometric correctness, but also domain-specific spatial relationships that matter to their business processes.</p>
-                </div>
+            <div class="project" id="pgmon">
+                <h2>PGMon - Building a Postgres Monitoring Platform From Scratch in Rust</h2>
+                <p>PGMon is an open-source monitoring platform for PostgreSQL built entirely in Rust.
+            It runs as a single binary that embeds a Prometheus exporter, an Axum REST API, and a Vite/
+            React UI, giving DBA's full-stack visibility without external services. The system samples
+            core system catalogs using a least-privilege role, correlates the resulting telemetry, and
+            visualizes it in a React dashboard.</p>
+
+                <h3>Poller Architecture</h3>
+                <p>The runtime orchestrates five asynchronous loops (hot-path, workload, storage,
+            hourly, and aggregation), each with its own cadence and execution budget. Every iteration is
+            timed, logged, and exported as Prometheus histograms and success flags; failures increment
+            counters and update shared loop health. A readiness probe checks these metrics to ensure
+            fresh data on <code>/healthz</code>. This structure keeps the scheduler deterministic while
+            surfacing when a loop misses its target window.</p>
+
+                <h3>Workload Analytics</h3>
+                <p>The workload loop snapshots <code>pg_stat_database</code>,
+            <code>pg_stat_statements</code>, <code>pg_stat_wal</code>, and temp spill counters on each
+            pass. By diffing consecutive samples it derives TPS, QPS, mean latency, WAL throughput,
+            checkpoint ratios, temp rates, and more, storing the results in a ring buffer. The same
+            summary drives Prometheus gauges, populates the frontend history API, and feeds alert
+            logic.</p>
+                <p>When <code>pg_stat_monitor</code> is available, PGMon inspects histogram settings,
+            aggregates the <code>resp_calls</code> arrays, and interpolates percentile cutoffs to yield
+            p95/p99 latency. If the extension is missing or misconfigured, the collector downgrades
+            gracefully so the rest of the telemetry remains intact.</p>
+
+                <h3>Persistent Observability State</h3>
+                <p>A shared state engine, protected by asynchronous read–write locks, maintains the
+            latest snapshots, workload history, and alert lifecycle. High-resolution series live
+            in bounded buffers; a dedicated aggregation loop runs after midnight UTC to roll daily
+            summaries, and on Mondays to roll ISO-week summaries. The persistence module checkpoints
+            this state to disk using atomic write-and-rename, allowing the UI and API to restart with
+            historical context intact.</p>
+                <p>Alert lifecycles are tracked via set diffs: when the hot-path loop updates the
+            overview, PGMon computes which alerts started or cleared and records structured events with
+            timestamps. The frontend and API can therefore show not just the current status but the
+            sequence of alert transitions.</p>
+
+                <h3>Hourly Deep Collectors</h3>
+                <p>The hourly loop handles the heavier lifts:</p>
+                <ul>
+                    <li><strong>Partition analysis:</strong> Parses <code>pg_get_expr</code> bounds,
+            normalizes them into UTC timestamps, infers the dominant cadence by examining boundary
+            deltas, then flags future scheduling gaps and suggests the next partition window.</li>
+                    <li><strong>Wraparound risk:</strong> Samples database and relation age against
+            <code>autovacuum_freeze_max_age</code>, exports wraparound metrics, and pushes alerts when
+            thresholds are crossed.</li>
+                    <li><strong>Bloat sampling:</strong> Switches between <code>pgstattuple</code> and
+            <code>pgstattuple_approx</code> modes to measure free space and dead tuples, calculating
+            reclaimable bytes on the fly.</li>
+                    <li><strong>Replication lag:</strong> Computes per-replica lag in seconds and
+            bytes, ties the data back to severity gates, and updates overview alerts accordingly.</li>
+                </ul>
+
+                <h3>Storage and Index Profiling</h3>
+                <p>The storage loop executes a CTE-driven query that aggregates relation sizes,
+            cache hit ratios, and dead tuple estimates in one pass. It derives bloat bytes from tuple
+            density, surfaces heap/index/TOAST footprints, and identifies heavy unused indexes based on
+            scan counts and size thresholds. Results are exported to Prometheus and cached in state for
+            the API/Ops UI.</p>
+
+                <h3>Recommendation Engine</h3>
+                <p>A rule-driven engine turns the collected telemetry into prioritized actions.
+            It correlates storage stats, autovacuum history, bloat samples, and stale statistics
+            to propose VACUUM ANALYZE, VACUUM FULL, ANALYZE, or autovacuum tuning steps. Each
+            recommendation includes severity, SQL to execute, rationale written for humans, estimated
+            runtime, and whether an exclusive lock is required, so operators get actionable next steps
+            instead of raw metrics.</p>
+
+                <h3>Operations & Delivery</h3>
+                <p>Axum routes expose JSON APIs, the Prometheus scrape endpoint, and the bundled
+            frontend from the same binary. CI enforces <code>cargo fmt -- --check</code>, <code>cargo
+            clippy --all-targets --all-features -D warnings</code>, complete test suites, and
+            frontend builds to keep the system shippable. Docker packaging makes local evaluation
+            straightforward, while production deployments can run the single binary in an air-gapped
+            environment by pointing it at an existing Postgres role.</p>
+
+                <p>PGMon demonstrates a complete Rust observability platform for Postgres:
+            deterministic polling, statistically sound workload analytics, durable historical state,
+            deep domain collectors, and a recommendation layer that bridges telemetry to database
+            operations.</p>
             </div>
-    </div>
         </div>
     </div>
 

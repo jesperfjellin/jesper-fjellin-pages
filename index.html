@@ -541,7 +541,7 @@
     <header>
         <div class="header-content">
             <h1>Jesper Fjellin</h1>
-            <p class="title">GIS Developer & Engineer</p>
+            <p class="title">GIS Developer & Hydrologist</p>
             <div class="github-links">
                 <a href="https://github.com/jesperfjellin" target="_blank" class="btn">GitHub</a>
                 <a href="https://www.linkedin.com/in/jesper-fjellin/" target="_blank" class="btn">Linkedin</a>
@@ -561,7 +561,7 @@
                 <li><a href="#Delta-Encoding-and-MongoDB">Delta Encoding and MongoDB</a></li>
                 <li><a href="#Docker-in-Production-Environments">Docker in Production Environments</a></li>
                 <li><a href="#rust-bindings">Rust Bindings in Python</a></li>
-                <li><a href="#pgmon">PGMon - Rust Observability</a></li>
+                <li><a href="#pgmon">PGMon - Postgres Monitoring in Rust</a></li>
             </ul>
         </nav>
         
@@ -786,15 +786,29 @@
             <!-- Project 6 -->
             <div class="project" id="pgmon">
                 <h2>PGMon - Building a Postgres Monitoring Platform From Scratch in Rust</h2>
+
+                <h3>Motivation</h3>
+                <p>This year, I decided to take a week off during autumn, which I don't think I have done since I attended university.
+            I was in the building mood, and I am working on Postgres infrastructure at work at the moment, so I decided to spend some time
+            reading up on Postgres observability. Of course, there are already a lot of great tools such as PGAdmin and Dbeaver readily available, but
+            I've always felt that the best way to learn something is through project work, so I decided to try to implement my own observability platform from 
+            scratch in Rust. The project is still far from done, and is missing some frontend polish, but through using incredible Postgres extensions such as 
+            'pg_stat_statements', 'pg_stat_monitor' and 'pgstattuple', iteration was a fairly rapid process.<p/> <a href="https://github.com/jesperfjellin/pgmon" target="_blank">Github repo</a></p>
+                
                 <p>PGMon is an open-source monitoring platform for PostgreSQL built entirely in Rust.
             It runs as a single binary that embeds a Prometheus exporter, an Axum REST API, and a Vite/
             React UI, giving DBA's full-stack visibility without external services. The system samples
             core system catalogs using a least-privilege role, correlates the resulting telemetry, and
-            visualizes it in a React dashboard.</p>
+            visualizes it in a dashboard.</p>
+
+            <div class="centered-content">
+                <img src="images/pgmon_overview.png" alt="PGMon overview/landing page.">
+                <p>Comparison of data sizes: Original GeoJSON format vs BSON-encoded format with delta compression. The combined approach reduces the file size by almost 90% while maintaining full coordinate precision.</p>
+            </div>
 
                 <h3>Poller Architecture</h3>
-                <p>The runtime orchestrates five asynchronous loops (hot-path, workload, storage,
-            hourly, and aggregation), each with its own cadence and execution budget. Every iteration is
+                <p>The runtime orchestrates five asynchronous loops: hot-path, workload, storage,
+            hourly, and aggregation, each with its own cadence and execution budget. Every iteration is
             timed, logged, and exported as Prometheus histograms and success flags; failures increment
             counters and update shared loop health. A readiness probe checks these metrics to ensure
             fresh data on <code>/healthz</code>. This structure keeps the scheduler deterministic while

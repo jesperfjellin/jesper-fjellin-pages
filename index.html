@@ -793,7 +793,7 @@
             reading up on Postgres observability. Of course, there are already a lot of great tools such as PGAdmin and Dbeaver readily available, but
             I've always felt that the best way to learn something is through project work, so I decided to try to implement my own observability platform from 
             scratch in Rust. The project is still far from done, and is missing some frontend polish, but through using incredible Postgres extensions such as 
-            'pg_stat_statements', 'pg_stat_monitor' and 'pgstattuple', iteration was a fairly rapid process.<p/> <a href="https://github.com/jesperfjellin/pgmon" target="_blank">Github repo</a></p>
+            'pg_stat_statements', 'pg_stat_monitor' and 'pgstattuple', iteration was a fairly rapid process. <a href="https://github.com/jesperfjellin/pgmon" target="_blank">Github repo</a></p>
                 
                 <p>PGMon is an open-source monitoring platform for PostgreSQL built entirely in Rust.
             It runs as a single binary that embeds a Prometheus exporter, an Axum REST API, and a Vite/
@@ -803,7 +803,7 @@
 
             <div class="centered-content">
                 <img src="images/pgmon_overview.png" alt="PGMon overview/landing page.">
-                <p>Comparison of data sizes: Original GeoJSON format vs BSON-encoded format with delta compression. The combined approach reduces the file size by almost 90% while maintaining full coordinate precision.</p>
+                <p>PGMon dashboard showing some of the more important metrics like concurrent connections, transactions per second, queries per second, as well as latency and wraparound.</p>
             </div>
 
                 <h3>Poller Architecture</h3>

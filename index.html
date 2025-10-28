@@ -535,6 +535,25 @@
         .blog-section .centered-content {
             margin: 40px auto;
         }
+
+        .github-repo-link {
+            font-size: 0.9em;
+            color: var(--secondary-color);
+            margin: -10px 0 25px 0;
+            display: block;
+        }
+
+        .github-repo-link a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: var(--transition);
+        }
+
+        .github-repo-link a:hover {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+        }
     </style>
 </head>
 <body>
@@ -569,14 +588,17 @@
             <!-- Project 1 -->
             <div class="project" id="pgmon">
                 <h2>PGMon - Building a Postgres Monitoring Platform From Scratch in Rust</h2>
+                <div class="github-repo-link">
+                    <a href="https://github.com/jesperfjellin/pgmon" target="_blank">github.com/jesperfjellin/pgmon</a>
+                </div>
 
                 <h3>Motivation</h3>
                 <p>This year, I decided to take a week off during autumn, which I don't think I have done since I attended university.
             I was in the building mood, and I am working on Postgres infrastructure at work at the moment, so I decided to spend some time
             reading up on Postgres observability. Of course, there are already a lot of great tools such as PGAdmin and Dbeaver readily available, but
-            I've always felt that the best way to learn something is through project work, so I decided to try to implement my own observability platform from 
-            scratch in Rust. The project is still far from done, and is missing some frontend polish, but through using Postgres extensions such as 
-            'pg_stat_statements', 'pg_stat_monitor' and 'pgstattuple', iteration was a fairly rapid process. <a href="https://github.com/jesperfjellin/pgmon" target="_blank">Github repo</a></p>
+            I've always felt that the best way to learn something is through project work, so I decided to try to implement my own observability platform from
+            scratch in Rust. The project is still far from done, and is missing some frontend polish, but through using Postgres extensions such as
+            'pg_stat_statements', 'pg_stat_monitor' and 'pgstattuple', iteration was a fairly rapid process.</p>
                 
                 <p>PGMon is an open-source monitoring platform for PostgreSQL built entirely in Rust.
             It runs as a single binary that embeds a Prometheus exporter, an Axum REST API, and a Vite/
@@ -679,7 +701,10 @@
             <!-- Project 2 -->
             <div class="project" id="dbfriend">
                 <h2>dbfriend - PostGIS Database Management</h2>
-                <p>dbfriend is a Python command-line tool designed to simplify the loading and synchronization of spatial data into PostGIS databases. It focuses on data integrity and safety, ensuring that your database operations are reliable and efficient. By handling complex tasks intelligently, dbfriend helps GIS professionals and database administrators streamline their workflows. <a href="https://github.com/jesperfjellin/dbfriend" target="_blank">Github repo</a></p>
+                <div class="github-repo-link">
+                    <a href="https://github.com/jesperfjellin/dbfriend" target="_blank">github.com/jesperfjellin/dbfriend</a>
+                </div>
+                <p>dbfriend is a Python command-line tool designed to simplify the loading and synchronization of spatial data into PostGIS databases. It focuses on data integrity and safety, ensuring that your database operations are reliable and efficient. By handling complex tasks intelligently, dbfriend helps GIS professionals and database administrators streamline their workflows.</p>
                 
                 <!-- Feature Cards -->
                 <div class="features">
@@ -738,7 +763,10 @@
             <!-- Project 3 -->
             <div class="project" id="sosilogikk">
                 <h2>Sosilogikk</h2>
-                <p>Sosilogikk is a Python module intended to streamline the use of Python libraries like Shapely or Fiona for GIS analyses, on the Norwegian vector data format SOSI (Samordnet Opplegg for Stedfestet Informasjon). Sosilogikk allows the user to seamlessly load a .SOS file into a GeoPandas GeoDataFrame through only a few lines of code. <a href="https://github.com/jesperfjellin/sosilogikk" target="_blank">Github repo</a></p>
+                <div class="github-repo-link">
+                    <a href="https://github.com/jesperfjellin/sosilogikk" target="_blank">github.com/jesperfjellin/sosilogikk</a>
+                </div>
+                <p>Sosilogikk is a Python module intended to streamline the use of Python libraries like Shapely or Fiona for GIS analyses, on the Norwegian vector data format SOSI (Samordnet Opplegg for Stedfestet Informasjon). Sosilogikk allows the user to seamlessly load a .SOS file into a GeoPandas GeoDataFrame through only a few lines of code.</p>
                 
                 <div class="centered-content">
                     <img src="images/SOSI-file.png" alt="Example SOSI-file">
@@ -761,7 +789,10 @@
             <!-- Project 4 -->
             <div class="project" id="Delta-Encoding-and-MongoDB">
                 <h2>Delta Encoding and MongoDB - Optimizing for Cloud Computing</h2>
-                <p>Modern cloud-native GIS applications often need to efficiently store and transmit large volumes of geographic data between services. While GeoJSON is the standard format for geographic data exchange, its text-based nature makes it suboptimal for cloud storage and transmission. This solution combines MongoDB's BSON format with delta encoding to create a highly efficient geographic data pipeline. <a href="https://github.com/jesperfjellin/bson_encoding" target="_blank">Github repo</a></p>
+                <div class="github-repo-link">
+                    <a href="https://github.com/jesperfjellin/bson_encoding" target="_blank">github.com/jesperfjellin/bson_encoding</a>
+                </div>
+                <p>Modern cloud-native GIS applications often need to efficiently store and transmit large volumes of geographic data between services. While GeoJSON is the standard format for geographic data exchange, its text-based nature makes it suboptimal for cloud storage and transmission. This solution combines MongoDB's BSON format with delta encoding to create a highly efficient geographic data pipeline.</p>
             
                 <div class="blog-section">
                     <h3>BSON and MongoDB in Cloud Computing</h3>

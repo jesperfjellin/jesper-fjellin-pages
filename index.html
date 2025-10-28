@@ -556,17 +556,127 @@
     <div class="container">
         <nav class="project-nav">
             <ul>
+                <li><a href="#pgmon">PGMon - Postgres Monitoring in Rust</a></li>
                 <li><a href="#dbfriend" class="active">dbfriend</a></li>
                 <li><a href="#sosilogikk">Sosilogikk</a></li>
                 <li><a href="#Delta-Encoding-and-MongoDB">Delta Encoding and MongoDB</a></li>
                 <li><a href="#Docker-in-Production-Environments">Docker in Production Environments</a></li>
                 <li><a href="#rust-bindings">Rust Bindings in Python</a></li>
-                <li><a href="#pgmon">PGMon - Postgres Monitoring in Rust</a></li>
             </ul>
         </nav>
         
         <div class="projects-container">
             <!-- Project 1 -->
+            <div class="project" id="pgmon">
+                <h2>PGMon - Building a Postgres Monitoring Platform From Scratch in Rust</h2>
+
+                <h3>Motivation</h3>
+                <p>This year, I decided to take a week off during autumn, which I don't think I have done since I attended university.
+            I was in the building mood, and I am working on Postgres infrastructure at work at the moment, so I decided to spend some time
+            reading up on Postgres observability. Of course, there are already a lot of great tools such as PGAdmin and Dbeaver readily available, but
+            I've always felt that the best way to learn something is through project work, so I decided to try to implement my own observability platform from 
+            scratch in Rust. The project is still far from done, and is missing some frontend polish, but through using incredible Postgres extensions such as 
+            'pg_stat_statements', 'pg_stat_monitor' and 'pgstattuple', iteration was a fairly rapid process. <a href="https://github.com/jesperfjellin/pgmon" target="_blank">Github repo</a></p>
+                
+                <p>PGMon is an open-source monitoring platform for PostgreSQL built entirely in Rust.
+            It runs as a single binary that embeds a Prometheus exporter, an Axum REST API, and a Vite/
+            React UI, giving DBA's full-stack visibility without external services. The system samples
+            core system catalogs using a least-privilege role, correlates the resulting telemetry, and
+            visualizes it in a dashboard.</p>
+
+            <div class="centered-content">
+                <img src="images/pgmon_overview.png" alt="PGMon overview/landing page.">
+                <p>PGMon dashboard showing some of the more important metrics like concurrent connections, transactions per second, queries per second, as well as latency and wraparound.</p>
+            </div>
+
+                <h3>Poller Architecture</h3>
+                <p>The runtime orchestrates five asynchronous loops: hot-path, workload, storage,
+            hourly, and aggregation, each with its own cadence and execution budget. Every iteration is
+            timed, logged, and exported as Prometheus histograms and success flags; failures increment
+            counters and update shared loop health. A readiness probe checks these metrics to ensure
+            fresh data on <code>/healthz</code>. This structure keeps the scheduler deterministic while
+            surfacing when a loop misses its target window.</p>
+
+                <h3>Workload Analytics</h3>
+                <p>The workload loop snapshots <code>pg_stat_database</code>,
+            <code>pg_stat_statements</code>, <code>pg_stat_wal</code>, and temp spill counters on each
+            pass. By diffing consecutive samples it derives TPS, QPS, mean latency, WAL throughput,
+            checkpoint ratios, temp rates, and more, storing the results in a ring buffer. The same
+            summary drives Prometheus gauges, populates the frontend history API, and feeds alert
+            logic.</p>
+                <p>When <code>pg_stat_monitor</code> is available, PGMon inspects histogram settings,
+            aggregates the <code>resp_calls</code> arrays, and interpolates percentile cutoffs to yield
+            p95/p99 latency. If the extension is missing or misconfigured, the collector downgrades
+            gracefully so the rest of the telemetry remains intact.</p>
+
+            <div class="centered-content">
+                <img src="images/pgmon_workload.png" alt="PGMon workload analytics showing top queries">
+                <p>Workload analytics view displaying top queries with performance metrics including calls, total time, mean latency, and cache hit ratios.</p>
+            </div>
+
+                <h3>Persistent Observability State</h3>
+                <p>A shared state engine, protected by asynchronous read–write locks, maintains the
+            latest snapshots, workload history, and alert lifecycle. High-resolution series live
+            in bounded buffers; a dedicated aggregation loop runs after midnight UTC to roll daily
+            summaries, and on Mondays to roll ISO-week summaries. The persistence module checkpoints
+            this state to disk using atomic write-and-rename, allowing the UI and API to restart with
+            historical context intact.</p>
+                <p>Alert lifecycles are tracked via set diffs: when the hot-path loop updates the
+            overview, PGMon computes which alerts started or cleared and records structured events with
+            timestamps. The frontend and API can therefore show not just the current status but the
+            sequence of alert transitions.</p>
+
+                <h3>Hourly Deep Collectors</h3>
+                <p>The hourly loop handles the heavier lifts:</p>
+                <ul>
+                    <li><strong>Partition analysis:</strong> Parses <code>pg_get_expr</code> bounds,
+            normalizes them into UTC timestamps, infers the dominant cadence by examining boundary
+            deltas, then flags future scheduling gaps and suggests the next partition window.</li>
+                    <li><strong>Wraparound risk:</strong> Samples database and relation age against
+            <code>autovacuum_freeze_max_age</code>, exports wraparound metrics, and pushes alerts when
+            thresholds are crossed.</li>
+                    <li><strong>Bloat sampling:</strong> Switches between <code>pgstattuple</code> and
+            <code>pgstattuple_approx</code> modes to measure free space and dead tuples, calculating
+            reclaimable bytes on the fly.</li>
+                    <li><strong>Replication lag:</strong> Computes per-replica lag in seconds and
+            bytes, ties the data back to severity gates, and updates overview alerts accordingly.</li>
+                </ul>
+
+                <h3>Storage and Index Profiling</h3>
+                <p>The storage loop executes a CTE-driven query that aggregates relation sizes,
+            cache hit ratios, and dead tuple estimates in one pass. It derives bloat bytes from tuple
+            density, surfaces heap/index/TOAST footprints, and identifies heavy unused indexes based on
+            scan counts and size thresholds. Results are exported to Prometheus and cached in state for
+            the API/Ops UI.</p>
+
+                <h3>Recommendation Engine</h3>
+                <p>A rule-driven engine turns the collected telemetry into prioritized actions.
+            It correlates storage stats, autovacuum history, bloat samples, and stale statistics
+            to propose VACUUM ANALYZE, VACUUM FULL, ANALYZE, or autovacuum tuning steps. Each
+            recommendation includes severity, SQL to execute, rationale written for humans, estimated
+            runtime, and whether an exclusive lock is required, so operators get actionable next steps
+            instead of raw metrics.</p>
+
+            <div class="centered-content">
+                <img src="images/pgmon_recommendations.png" alt="PGMon recommendations engine">
+                <p>Recommendations interface showing maintenance suggestions with severity levels, SQL commands, and detailed rationale for VACUUM ANALYZE and autovacuum tuning operations.</p>
+            </div>
+
+                <h3>Operations & Delivery</h3>
+                <p>Axum routes expose JSON APIs, the Prometheus scrape endpoint, and the bundled
+            frontend from the same binary. CI enforces <code>cargo fmt -- --check</code>, <code>cargo
+            clippy --all-targets --all-features -D warnings</code>, complete test suites, and
+            frontend builds to keep the system shippable. Docker packaging makes local evaluation
+            straightforward, while production deployments can run the single binary in an air-gapped
+            environment by pointing it at an existing Postgres role.</p>
+
+                <p>PGMon demonstrates a complete Rust observability platform for Postgres:
+            deterministic polling, statistically sound workload analytics, durable historical state,
+            deep domain collectors, and a recommendation layer that bridges telemetry to database
+            operations.</p>
+            </div>            
+            
+            <!-- Project 2 -->
             <div class="project" id="dbfriend">
                 <h2>dbfriend - PostGIS Database Management</h2>
                 <p>dbfriend is a Python command-line tool designed to simplify the loading and synchronization of spatial data into PostGIS databases. It focuses on data integrity and safety, ensuring that your database operations are reliable and efficient. By handling complex tasks intelligently, dbfriend helps GIS professionals and database administrators streamline their workflows. <a href="https://github.com/jesperfjellin/dbfriend" target="_blank">Github repo</a></p>
@@ -625,7 +735,7 @@
                 </div>
             </div>
 
-            <!-- Project 2 -->
+            <!-- Project 3 -->
             <div class="project" id="sosilogikk">
                 <h2>Sosilogikk</h2>
                 <p>Sosilogikk is a Python module intended to streamline the use of Python libraries like Shapely or Fiona for GIS analyses, on the Norwegian vector data format SOSI (Samordnet Opplegg for Stedfestet Informasjon). Sosilogikk allows the user to seamlessly load a .SOS file into a GeoPandas GeoDataFrame through only a few lines of code. <a href="https://github.com/jesperfjellin/sosilogikk" target="_blank">Github repo</a></p>
@@ -648,7 +758,7 @@
                 </div>
             </div>
 
-            <!-- Project 3 -->
+            <!-- Project 4 -->
             <div class="project" id="Delta-Encoding-and-MongoDB">
                 <h2>Delta Encoding and MongoDB - Optimizing for Cloud Computing</h2>
                 <p>Modern cloud-native GIS applications often need to efficiently store and transmit large volumes of geographic data between services. While GeoJSON is the standard format for geographic data exchange, its text-based nature makes it suboptimal for cloud storage and transmission. This solution combines MongoDB's BSON format with delta encoding to create a highly efficient geographic data pipeline. <a href="https://github.com/jesperfjellin/bson_encoding" target="_blank">Github repo</a></p>
@@ -696,7 +806,7 @@
                 </div>
             </div>
 
-            <!-- Project 4 -->
+            <!-- Project 5 -->
             <div class="project" id="Docker-in-Production-Environments">
                 <h2>Docker in Production Environments - Bridging Technical Gaps</h2>
                 <p>Working in GIS production environments has highlighted an interesting challenge: the gap between what can be automated and what typically is automated. While tools like ArcGIS and QGIS excel at interactive analysis, many workflows would benefit from programmatic automation - yet often remain manual processes.</p>
@@ -744,7 +854,7 @@
                     <p>The integration of Docker in GIS workflows opens interesting possibilities for the future of spatial data processing. As cloud infrastructure becomes more prevalent in GIS, containerized workflows could become the standard way of handling automated spatial analysis. The key will be maintaining the balance between powerful automation capabilities and user-friendly interfaces.</p>
                 </div>
             </div>
-            <!-- Project 5 -->
+            <!-- Project 6 -->
             <div class="project" id="rust-bindings">
                 <h2>Rust Bindings in Python - When Fast Data Processing Matters</h2>
                 <p>Python is a powerful language for rapid development, especially in the GIS domain, thanks to libraries like GeoPandas and Shapely. However, when processing large datasets or performing complex calculations, Python's speed can become a limitation. This is where Rust comes in - offering the speed we need while letting us keep Python's ease of use.</p>
@@ -781,106 +891,6 @@
                     <h3>Integrating Rust with Python</h3>
                     <p>By incorporating Rust into a Python-based workflow, we can leverage the strengths of both languages. Python remains the glue that holds the workflow together, providing ease of use and flexibility, while Rust handles the heavy lifting where performance is critical. This combination allows us to build robust GIS applications that are both user-friendly and highly efficient.</p>
                 </div>
-            </div>
-
-            <!-- Project 6 -->
-            <div class="project" id="pgmon">
-                <h2>PGMon - Building a Postgres Monitoring Platform From Scratch in Rust</h2>
-
-                <h3>Motivation</h3>
-                <p>This year, I decided to take a week off during autumn, which I don't think I have done since I attended university.
-            I was in the building mood, and I am working on Postgres infrastructure at work at the moment, so I decided to spend some time
-            reading up on Postgres observability. Of course, there are already a lot of great tools such as PGAdmin and Dbeaver readily available, but
-            I've always felt that the best way to learn something is through project work, so I decided to try to implement my own observability platform from 
-            scratch in Rust. The project is still far from done, and is missing some frontend polish, but through using incredible Postgres extensions such as 
-            'pg_stat_statements', 'pg_stat_monitor' and 'pgstattuple', iteration was a fairly rapid process. <a href="https://github.com/jesperfjellin/pgmon" target="_blank">Github repo</a></p>
-                
-                <p>PGMon is an open-source monitoring platform for PostgreSQL built entirely in Rust.
-            It runs as a single binary that embeds a Prometheus exporter, an Axum REST API, and a Vite/
-            React UI, giving DBA's full-stack visibility without external services. The system samples
-            core system catalogs using a least-privilege role, correlates the resulting telemetry, and
-            visualizes it in a dashboard.</p>
-
-            <div class="centered-content">
-                <img src="images/pgmon_overview.png" alt="PGMon overview/landing page.">
-                <p>PGMon dashboard showing some of the more important metrics like concurrent connections, transactions per second, queries per second, as well as latency and wraparound.</p>
-            </div>
-
-                <h3>Poller Architecture</h3>
-                <p>The runtime orchestrates five asynchronous loops: hot-path, workload, storage,
-            hourly, and aggregation, each with its own cadence and execution budget. Every iteration is
-            timed, logged, and exported as Prometheus histograms and success flags; failures increment
-            counters and update shared loop health. A readiness probe checks these metrics to ensure
-            fresh data on <code>/healthz</code>. This structure keeps the scheduler deterministic while
-            surfacing when a loop misses its target window.</p>
-
-                <h3>Workload Analytics</h3>
-                <p>The workload loop snapshots <code>pg_stat_database</code>,
-            <code>pg_stat_statements</code>, <code>pg_stat_wal</code>, and temp spill counters on each
-            pass. By diffing consecutive samples it derives TPS, QPS, mean latency, WAL throughput,
-            checkpoint ratios, temp rates, and more, storing the results in a ring buffer. The same
-            summary drives Prometheus gauges, populates the frontend history API, and feeds alert
-            logic.</p>
-                <p>When <code>pg_stat_monitor</code> is available, PGMon inspects histogram settings,
-            aggregates the <code>resp_calls</code> arrays, and interpolates percentile cutoffs to yield
-            p95/p99 latency. If the extension is missing or misconfigured, the collector downgrades
-            gracefully so the rest of the telemetry remains intact.</p>
-
-                <h3>Persistent Observability State</h3>
-                <p>A shared state engine, protected by asynchronous read–write locks, maintains the
-            latest snapshots, workload history, and alert lifecycle. High-resolution series live
-            in bounded buffers; a dedicated aggregation loop runs after midnight UTC to roll daily
-            summaries, and on Mondays to roll ISO-week summaries. The persistence module checkpoints
-            this state to disk using atomic write-and-rename, allowing the UI and API to restart with
-            historical context intact.</p>
-                <p>Alert lifecycles are tracked via set diffs: when the hot-path loop updates the
-            overview, PGMon computes which alerts started or cleared and records structured events with
-            timestamps. The frontend and API can therefore show not just the current status but the
-            sequence of alert transitions.</p>
-
-                <h3>Hourly Deep Collectors</h3>
-                <p>The hourly loop handles the heavier lifts:</p>
-                <ul>
-                    <li><strong>Partition analysis:</strong> Parses <code>pg_get_expr</code> bounds,
-            normalizes them into UTC timestamps, infers the dominant cadence by examining boundary
-            deltas, then flags future scheduling gaps and suggests the next partition window.</li>
-                    <li><strong>Wraparound risk:</strong> Samples database and relation age against
-            <code>autovacuum_freeze_max_age</code>, exports wraparound metrics, and pushes alerts when
-            thresholds are crossed.</li>
-                    <li><strong>Bloat sampling:</strong> Switches between <code>pgstattuple</code> and
-            <code>pgstattuple_approx</code> modes to measure free space and dead tuples, calculating
-            reclaimable bytes on the fly.</li>
-                    <li><strong>Replication lag:</strong> Computes per-replica lag in seconds and
-            bytes, ties the data back to severity gates, and updates overview alerts accordingly.</li>
-                </ul>
-
-                <h3>Storage and Index Profiling</h3>
-                <p>The storage loop executes a CTE-driven query that aggregates relation sizes,
-            cache hit ratios, and dead tuple estimates in one pass. It derives bloat bytes from tuple
-            density, surfaces heap/index/TOAST footprints, and identifies heavy unused indexes based on
-            scan counts and size thresholds. Results are exported to Prometheus and cached in state for
-            the API/Ops UI.</p>
-
-                <h3>Recommendation Engine</h3>
-                <p>A rule-driven engine turns the collected telemetry into prioritized actions.
-            It correlates storage stats, autovacuum history, bloat samples, and stale statistics
-            to propose VACUUM ANALYZE, VACUUM FULL, ANALYZE, or autovacuum tuning steps. Each
-            recommendation includes severity, SQL to execute, rationale written for humans, estimated
-            runtime, and whether an exclusive lock is required, so operators get actionable next steps
-            instead of raw metrics.</p>
-
-                <h3>Operations & Delivery</h3>
-                <p>Axum routes expose JSON APIs, the Prometheus scrape endpoint, and the bundled
-            frontend from the same binary. CI enforces <code>cargo fmt -- --check</code>, <code>cargo
-            clippy --all-targets --all-features -D warnings</code>, complete test suites, and
-            frontend builds to keep the system shippable. Docker packaging makes local evaluation
-            straightforward, while production deployments can run the single binary in an air-gapped
-            environment by pointing it at an existing Postgres role.</p>
-
-                <p>PGMon demonstrates a complete Rust observability platform for Postgres:
-            deterministic polling, statistically sound workload analytics, durable historical state,
-            deep domain collectors, and a recommendation layer that bridges telemetry to database
-            operations.</p>
             </div>
         </div>
     </div>
